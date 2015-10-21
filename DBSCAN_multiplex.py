@@ -13,20 +13,19 @@
 
 r"""A fast and memory-efficient implementation of DBSCAN 
 (Density-Based Spatial Clustering of Applications with Noise) 
-for repeated rounds of random subsamplings 
-and clusterings from a data-set. 
+for repeated rounds of random subsamplings and clusterings from a data-set. 
 
 After a linear overhead, each call to DBSCAN has O(N) time complexity,
-instead of the time complexity O(N log(N)) associated with most 
-other implementations of DBSCAN.
+instead of the time complexity O(N log(N)) associated with most other implementations of DBSCAN.
 
-In addition, unlike Scikit-learn's implementation, by relying on an HDF5 data structure this version of DBSCAN can deal with large data-sets without saturating the machine's memory resources.
+In addition, unlike Scikit-learn's implementation, by relying on an HDF5 data structure this version of DBSCAN
+can deal with large data-sets without saturating the machine's memory resources.
 
-This module is especially suitable for repeated runs of clusterings on subsamples of a data-set. This incurs an initial overhead but then each subsequent call 
-to DBSCAN has O(N) time complexity. In comparison, the standard implementation of DBSCAN runs in O(N log(N)).
+This module is especially suitable for repeated runs of clusterings on subsamples of a data-set. 
+This incurs an initial overhead but then each subsequent call to DBSCAN has O(N) time complexity. 
+In comparison, the standard implementation of DBSCAN runs in O(N log(N)).
        
-For instance, consider a small data-set of 15,000 samples, generated as
-a normally distributed matrix of 47 features:
+For instance, consider a small data-set of 15,000 samples, generated as a normally distributed matrix of 47 features:
 
         
 >>> data = np.random.randn(15000, 47)
@@ -57,14 +56,15 @@ True
 
        
 On the laptop where this code was tested (8GiB of RAM), the implementation 
-herewith took about 188 + 50 * 1.2 seconds to complete, whereas 
-the version provided by Scikit-learn needed at least 50 * 34 seconds,
-i.e. slightly over 4 minutes versus more than 28 minutes, 
-illustrating the overwelming advantage of the present implementation. 
-(not even taking into account the time needed for determining a suitable
-value for epsilon, which accounts for about 39 seconds out of those 188 seconds).
+herewith took about 188 + 50 * 1.2 seconds to complete, whereas the version provided by Scikit-learn needed 
+at least 50 * 34 seconds, i.e. slightly over 4 minutes versus more than 28 minutes, illustrating 
+the overwelming advantage of the present implementation (not even taking into account the time needed for determining
+a suitable value for epsilon, which accounts for about 39 seconds out of those 188 seconds).
         
-The benefits of our implementation are even more significant for a larger number of samples. For instance, for a matrix of 50000 samples and 47 features, 50 rounds of clustering of random subsamples of size 80% would take about 1608 + 50 * 1.3 = 1673 seconds for this version, versus 50 * 653 = 32650 seconds for Scikit-learn.
+The benefits of our implementation are even more significant for a larger number of samples. 
+For instance, for a matrix of 50000 samples and 47 features, 50 rounds of clustering of random subsamples 
+of size 80% would take about 1608 + 50 * 1.3 = 1673 seconds for this version, 
+versus 50 * 653 = 32650 seconds for Scikit-learn.
 """
 
 
@@ -176,74 +176,67 @@ def get_chunk_size(N, n):
         return chunks_size
         #return 3
     else:
-        raise MemoryError("\nDBSCAN_multiplex:\tERROR @ get_chunk_size: this machine does not have enough free memory to perform the remaining computations.\n")
+        raise MemoryError("\nDBSCAN_multiplex:\tERROR @ get_chunk_size:\n"
+                          "this machine does not have enough free memory to perform the remaining computations.\n")
 
 
 #**************************************************************************************************
 # load
 #**************************************************************************************************
 
-def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, metric = 'minkowski', p = 2, verbose = True):
-    r"""Determines the radius 'eps' for DBSCAN clustering of 'data'
-        in an adaptive, data-dependent way.
+def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, 
+metric = 'minkowski', p = 2, verbose = True):
+    r"""Determines the radius 'eps' for DBSCAN clustering of 'data' in an adaptive, data-dependent way.
 
     Parameters
     ----------
     hdf5_file_name : file object or string
-        The handle or name of an HDF5 data structure where any array 
-        needed for DBSCAN and too large to fit into memory is to be stored.
+        The handle or name of an HDF5 data structure where any array needed for DBSCAN
+        and too large to fit into memory is to be stored.
 
     data : array of shape (n_samples, n_features)
         An array of features retained from the data-set to be analysed. 
-        Subsamples of this curated data-set can also be analysed 
-        by a call to DBSCAN by providing an appropriate list
-        of selected samples labels, stored in 'subsamples_matrix' (see below).
+        Subsamples of this curated data-set can also be analysed by a call to DBSCAN by providing an appropriate 
+        list of selected samples labels, stored in 'subsamples_matrix' (see below).
 
     subsamples_matrix : array of shape (n_runs, n_subsamples), optional (default = None)
-        Each row of this matrix contains a set of indices identifying
-        the samples selected from the whole data-set for each of 'n_runs'
-        independent rounds of DBSCAN clusterings.
+        Each row of this matrix contains a set of indices identifying the samples selected from the whole data-set
+        for each of 'n_runs' independent rounds of DBSCAN clusterings.
 
     minPts : int
-        The number of points within an epsilon-radius hypershpere 
-        for the said region to qualify as dense.
+        The number of points within an epsilon-radius hypershpere for the said region to qualify as dense.
 
     eps : float, optional (default = None)
-        Sets the maximum distance separating two data-points
-        for those data-points to be considered as part of the same neighborhood.
+        Sets the maximum distance separating two data-points for those data-points to be considered 
+        as part of the same neighborhood.
 
     quantile : int, optional (default = 50)
-        If 'eps' is not provided by the user, it will be determined as the
-        'quantile' of the distribution of the k-nearest distances to each sample,
-        with k set to 'minPts'.
+        If 'eps' is not provided by the user, it will be determined as the 'quantile' of the distribution 
+        of the k-nearest distances to each sample, with k set to 'minPts'.
 
     samples_weights : array of shape (n_runs, n_samples), optional (default = None)
-        Holds the weights of each sample. A sample with weight 
-        greater than 'minPts' is guaranteed to be a core sample; a sample with
-        negative weight tends to prevent its 'eps'-neighbors from being core. 
+        Holds the weights of each sample. A sample with weight greater than 'minPts' is guaranteed to be
+        a core sample; a sample with negative weight tends to prevent its 'eps'-neighbors from being core. 
         Weights are absolute and default to 1.
 
     metric : string or callable, optional (default = 'euclidean')
-        The metric to use for computing the pairwise distances between samples
-        (each sample corresponds to a row in 'data'). 
-        If metric is a string or callable, it must be compatible 
+        The metric to use for computing the pairwise distances between samples 
+        (each sample corresponds to a row in 'data'). If metric is a string or callable, it must be compatible 
         with metrics.pairwise.pairwise_distances.
 
     p : float, optional (default = 2)
         If a Minkowski metric is used, 'p' determines its power.
 
     verbose : Boolean, optional (default = True)
-        Whether to display messages reporting the status of the computations 
-        and the time it took to complete each major stage of the algorithm. 
+        Whether to display messages reporting the status of the computations and the time it took 
+        to complete each major stage of the algorithm. 
 
     Returns
     -------
     eps : float
-        The parameter of DBSCAN clustering specifying 
-        if points are density-reachable. This is either a copy of the value provided 
-        at input or, if the user did not specify a value of 'eps' at input, 
-        the return value if the one determined from k-distance graphs
-        from the data-set.
+        The parameter of DBSCAN clustering specifying if points are density-reachable. 
+        This is either a copy of the value provided at input or, if the user did not specify a value of 'eps' at input, 
+        the return value if the one determined from k-distance graphs from the data-set.
 
     References
     ----------
@@ -305,7 +298,9 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
         # of the maximum of the minPts-nearest neighbors distances for each sample.
         if verbose:
             print("INFO: DBSCAN_multiplex @ load:\n"
-                  "starting the determination of an appropriate value of 'eps' for this data-set and for the other parameter of the DBSCAN algorithm set to {minPts}.\nThis might take a while.".format(**locals()))
+                  "starting the determination of an appropriate value of 'eps' for this data-set"
+                  " and for the other parameter of the DBSCAN algorithm set to {minPts}.\n"
+                  "This might take a while.".format(**locals()))
 
         beg_eps = time.time()
 
@@ -327,7 +322,8 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
 
         if verbose:
             print("\nINFO: DBSCAN_multiplex @ load:\n"
-                  "done with evaluating parameter 'eps' from the data-set provided. This took {} seconds. Value of epsilon: {}.".format(round(end_eps - beg_eps, 4), eps))
+                  "done with evaluating parameter 'eps' from the data-set provided."
+                  " This took {} seconds. Value of epsilon: {}.".format(round(end_eps - beg_eps, 4), eps))
 
     else:
         if not (isinstance(eps, float) or isinstance(eps, int)):
@@ -346,14 +342,18 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
     # which will be considered later.
     if verbose:
        print("\nINFO: DBSCAN_multiplex @ load:\n"
-             "identifying the neighbors within an hypersphere of radius {eps} around each sample, while at the same time evaluating the number of epsilon-neighbors for each sample.\nThis might take a fair amount of time (possibly a few hours with several hundreds of thousands of samples)".format(**locals()))
+             "identifying the neighbors within an hypersphere of radius {eps} around each sample,"
+             " while at the same time evaluating the number of epsilon-neighbors for each sample.\n"
+             "This might take a fair amount of time.".format(**locals()))
 
     beg_neigh = time.time()
 
     fileh = tables.open_file(hdf5_file_name, mode = 'r+')
     DBSCAN_group = fileh.create_group(fileh.root, 'DBSCAN_group')
 
-    neighborhoods_indices = fileh.create_earray(DBSCAN_group, 'neighborhoods_indices', tables.Int32Atom(), (0,), 'Indices array for sparse matrix of neighborhoods', expectedrows = int((N_samples ** 2) / 50))
+    neighborhoods_indices = fileh.create_earray(DBSCAN_group, 'neighborhoods_indices', tables.Int32Atom(), (0,), 
+                                                'Indices array for sparse matrix of neighborhoods', 
+                                                expectedrows = int((N_samples ** 2) / 50))
 
     # 'neighborhoods_indptr' is such that for each of row i of the data-matrix 
     # neighborhoods_indices[neighborhoods_indptr[i]:neighborhoods_indptr[i+1]]
@@ -364,7 +364,9 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
     # For each sample, 'neighbors_counts' will keep a tally of the number 
     # of its  neighbors within a hypersphere of radius 'eps'. 
     # Note that the sample itself is counted as part of this neighborhood.
-    neighbors_counts = fileh.create_carray(DBSCAN_group, 'neighbors_counts', tables.Int32Atom(), (N_runs, N_samples), 'Array of the number of neighbors around each sample of a set of subsampled points', filters = None)   
+    neighbors_counts = fileh.create_carray(DBSCAN_group, 'neighbors_counts', tables.Int32Atom(), (N_runs, N_samples), 
+                                           'Array of the number of neighbors around each sample of a set of subsampled points', 
+                                           filters = None)   
 
     chunks_size = get_chunk_size(N_samples, 3)
     for i in xrange(0, N_samples, chunks_size):
@@ -411,10 +413,12 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
 
         neighborhoods_indptr = np.append(neighborhoods_indptr, counts)
 
-    fileh.create_carray(DBSCAN_group, 'neighborhoods_indptr', tables.Int64Atom(), (N_samples + 1,), 'Array of cumulative number of column indices for each row', filters = None)
+    fileh.create_carray(DBSCAN_group, 'neighborhoods_indptr', tables.Int64Atom(), (N_samples + 1,), 
+                        'Array of cumulative number of column indices for each row', filters = None)
     fileh.root.DBSCAN_group.neighborhoods_indptr[:] = neighborhoods_indptr[:]
 
-    fileh.create_carray(DBSCAN_group, 'subsamples_matrix', tables.Int32Atom(), (N_runs, N_subsamples), 'Array of subsamples indices', filters = None)
+    fileh.create_carray(DBSCAN_group, 'subsamples_matrix', tables.Int32Atom(), (N_runs, N_subsamples), 
+                        'Array of subsamples indices', filters = None)
     fileh.root.DBSCAN_group.subsamples_matrix[:] = subsamples_matrix[:]
 
     fileh.close()
@@ -438,34 +442,29 @@ def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_mat
 def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = True): 
     r"""Perform DBSCAN clustering with parameters 'minPts' and 'eps'
         (as determined by a prior call to 'load' from this module). 
-        If multiple subsamples of the dataset were provided
-        in a preliminary call to 'load', 'sample_ID' specifies which one of those
-        subsamples is to undergo DBSCAN clustering. 
+        If multiple subsamples of the dataset were provided in a preliminary call to 'load', 
+        'sample_ID' specifies which one of those subsamples is to undergo DBSCAN clustering. 
          
     Parameters
     ----------
     hdf5_file_name : file object or string
-        The handle or name of an HDF5 file where any array needed for DBSCAN 
-        and too large to fit into memory is to be stored.
-        Procedure 'shoot' relies on arrays stored in this data structure by a previous
+        The handle or name of an HDF5 file where any array needed for DBSCAN and too large to fit into memory 
+        is to be stored. Procedure 'shoot' relies on arrays stored in this data structure by a previous
         call to 'load' (see corresponding documentation)
 
     sample_ID : int, optional (default = 0)
         Identifies the particular set of selected data-points on which to perform DBSCAN.
-        If not subsamples were provided in the call to 'load', the whole dataset will be
-        subjected to DBSCAN clustering.
+        If not subsamples were provided in the call to 'load', the whole dataset will be subjected to DBSCAN clustering.
 
     minPts : int
-        The number of points within a 'eps'-radius hypershpere 
-        for this region to qualify as dense.
+        The number of points within a 'eps'-radius hypershpere for this region to qualify as dense.
 
     random_state: np.RandomState, optional (default = None)
-        The generator used to reorder the samples. If None at input, 
-        will be set to np.random.
+        The generator used to reorder the samples. If None at input, will be set to np.random.
 
     verbose : Boolean, optional (default = True)
-        Whether to display messages concerning the status of the computations 
-        and the time it took to complete each major stage of the algorithm.
+        Whether to display messages concerning the status of the computations and the time it took to complete 
+        each major stage of the algorithm.
 
     Returns
     -------
@@ -473,9 +472,8 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
         Indices of the core samples.
 
     labels : array of shape (N_samples, ) 
-        Holds the cluster labels of each sample. 
-        The points considered as noise have entries -1. The points not initially 
-        selected for clustering (i.e. not listed in 'subsampled_indices', if the latter
+        Holds the cluster labels of each sample. The points considered as noise have entries -1. 
+        The points not initially selected for clustering (i.e. not listed in 'subsampled_indices', if the latter
         has been provided in the call to 'load' from this module) are labelled -2.
 
     References
@@ -532,7 +530,8 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
         while len(candidates) > 0:
             candidate_neighbors = np.zeros(0, dtype = np.int32)
             for k in candidates:
-                candidate_neighbors = np.append(candidate_neighbors, neighborhoods_indices[neighborhoods_indptr[k]: neighborhoods_indptr[k+1]])
+                candidate_neighbors = np.append(candidate_neighbors, 
+                                                neighborhoods_indices[neighborhoods_indptr[k]: neighborhoods_indptr[k+1]])
                 candidate_neighbors = np.unique(candidate_neighbors)
 
             candidate_neighbors = np.intersect1d(candidate_neighbors, subsampled_indices, assume_unique = True)
@@ -562,78 +561,66 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
 #**************************************************************************************************  
 
 
-def DBSCAN(data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, metric = 'minkowski', p = 2, verbose = True):
+def DBSCAN(data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, 
+metric = 'minkowski', p = 2, verbose = True):
     r"""Performs Density-Based Spatial Clustering of Applications with Noise,
-        possibly on various subsamples or combinations of data-points extracted
-        from the whole dataset, 'data'.
+        possibly on various subsamples or combinations of data-points extracted from the whole dataset, 'data'.
         
-        If the radius 'eps' is not provided by the user, it will be determined
-        in an adaptive, data-dependent way by a call to 'load' from this module
-        (see the corresponding documentation for more explanations).
+        If the radius 'eps' is not provided by the user, it will be determined in an adaptive, data-dependent way 
+        by a call to 'load' from this module (see the corresponding documentation for more explanations).
         
-        Unlike Scikit-learn's and many other versions of DBSCAN, 
-        this implementation does not experience failure due to 
-        'MemoryError' exceptions for large data-sets.
-        Indeed, any array too large to fit into memory is stored 
-        on disk in an HDF5 data structure.
+        Unlike Scikit-learn's and many other versions of DBSCAN, this implementation does not experience failure 
+        due to 'MemoryError' exceptions for large data-sets.
+        Indeed, any array too large to fit into memory is stored on disk in an HDF5 data structure.
     
     Parameters
     ----------
     data : array of shape (n_samples, n_features)
-        The data-set to be analysed. 
-        Subsamples of this curated data-set can also be analysed 
-        by a call to DBSCAN by providing lits of
-        of selected data-points, stored in 'subsamples_matrix' (see below).
+        The data-set to be analysed. Subsamples of this curated data-set can also be analysed 
+        by a call to DBSCAN by providing lits of selected data-points, stored in 'subsamples_matrix' (see below).
 
     subsamples_matrix : array of shape (n_runs, n_subsamples), optional (default = None)
-        Each row of this matrix contains a set of indices identifying
-        the samples selected from the whole data-set for each of 'n_runs'
-        independent rounds of DBSCAN clusterings.
+        Each row of this matrix contains a set of indices identifying the samples selected from the whole data-set 
+        for each of 'n_runs' independent rounds of DBSCAN clusterings.
 
     minPts : int
-        The number of points within an epsilon-radius hypershpere 
-        for the said region to qualify as dense.
+        The number of points within an epsilon-radius hypershpere for the said region to qualify as dense.
 
     eps : float, optional (default = None)
-        Sets the maximum distance separating two data-points
-        for those data-points to be considered as part of the same neighborhood.
+        Sets the maximum distance separating two data-points for those data-points to be considered 
+        as part of the same neighborhood.
 
     quantile : int, optional (default = 50)
-        If 'eps' is not provided by the user, it will be determined as the
-        'quantile' of the distribution of the k-nearest distances to each sample,
-        with k set to 'minPts'.
+        If 'eps' is not provided by the user, it will be determined as the 'quantile' of the distribution
+        of the k-nearest distances to each sample, with k set to 'minPts'.
 
     samples_weights : array of shape (n_runs, n_samples), optional (default = None)
-        Holds the weights of each sample. A sample with weight 
-        greater than 'minPts' is guaranteed to be a core sample; a sample with
-        negative weight tends to prevent its 'eps'-neighbors from being core. 
+        Holds the weights of each sample. A sample with weight greater than 'minPts' is guaranteed 
+        to be a core sample; a sample with negative weight tends to prevent its 'eps'-neighbors from being core. 
         Weights are absolute and default to 1.
 
     metric : string or callable, optional (default = 'euclidean')
         The metric to use for computing the pairwise distances between samples
         (each sample corresponds to a row in 'data'). 
-        If metric is a string or callable, it must be compatible 
-        with metrics.pairwise.pairwise_distances.
+        If metric is a string or callable, it must be compatible with metrics.pairwise.pairwise_distances.
 
     p : float, optional (default = 2)
         If a Minkowski metric is used, 'p' denotes its power.
 
     verbose : Boolean, optional (default = True)
-        Whether to display messages reporting the status of the computations 
-        and the time it took to complete each major stage of the algorithm. 
+        Whether to display messages reporting the status of the computations and the time it took to complete
+        each major stage of the algorithm. 
     
     Returns
     -------
     eps : float
-        The parameter of DBSCAN clustering specifying 
-        if points are density-reachable. This is relevant if the user chose to let
-        our procedures search for a value of this radius as a quantile
+        The parameter of DBSCAN clustering specifying if points are density-reachable. 
+        This is relevant if the user chose to let our procedures search for a value of this radius as a quantile
         of the distribution of 'minPts'-nearest distances for each data-point.
     
     labels_matrix : array of shape (N_samples, ) 
         For each sample, specifies the identity of the cluster to which it has been
-        assigned by DBSCAN. 
-        The points classified as noise have entries -1. The points that have not been
+        assigned by DBSCAN. The points classified as noise have entries -1. The points that have not been
         considered for clustering are labelled -2.
         
     References
