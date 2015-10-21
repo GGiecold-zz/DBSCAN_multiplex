@@ -55,7 +55,7 @@ setup(name = 'DBSCAN_multiplex',
       platforms = ('Any',),
       requires = ['numpy (>=1.9.0)', 'sklearn', 'tables'],
                           
-      classifiers=['Development Status :: 4 - Beta',
+      classifiers = ['Development Status :: 4 - Beta',
                    'Environment :: Console',
                    'Intended Audience :: End Users/Desktop',
                    'Intended Audience :: Developers',             
