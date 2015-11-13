@@ -176,8 +176,9 @@ def get_chunk_size(N, n):
         return chunks_size
         #return 3
     else:
-        raise MemoryError("\nDBSCAN_multiplex:\tERROR @ get_chunk_size:\n"
-                          "this machine does not have enough free memory to perform the remaining computations.\n")
+        raise MemoryError("\nERROR: DBSCAN_multiplex @ get_chunk_size:\n"
+                          "this machine does not have enough free memory "
+                          "to perform the remaining computations.\n")
 
 
 #**************************************************************************************************
@@ -249,8 +250,9 @@ metric = 'minkowski', p = 2, verbose = True):
 
     data = np.array(data, copy = False)
     if data.ndim > 2:
-        raise ValueError('\nERROR: DBSCAN_multiplex @ load:\n' 
-                         'the data array is of dimension %d. Please provide a two- dimensional array instead.\n' % data.ndim)
+        raise ValueError("\nERROR: DBSCAN_multiplex @ load:\n" 
+                         "the data array is of dimension %d. Please provide a two-dimensional "
+                         "array instead.\n" % data.ndim)
 
     if subsamples_matrix is None:
         subsamples_matrix = np.arange(data.shape[0], dtype = int)
@@ -260,8 +262,9 @@ metric = 'minkowski', p = 2, verbose = True):
         subsamples_matrix = np.array(subsamples_matrix, copy = False)
 
     if subsamples_matrix.ndim > 2:
-        raise ValueError('\nERROR: DBSCAN_multiplex @ load:\n'
-                         'the array of subsampled indices is of dimension %d. Please provide a two-dimensional array instead.\n' % subsamples_matrix.ndim)
+        raise ValueError("\nERROR: DBSCAN_multiplex @ load:\n"
+                         "the array of subsampled indices is of dimension %d. "
+                         "Please provide a two-dimensional array instead.\n" % subsamples_matrix.ndim)
 
     if (data.dtype.char in np.typecodes['AllFloat'] and not np.isfinite(data.sum()) and not np.all(np.isfinite(data))):
         raise ValueError('\nERROR: DBSCAN_multiplex @ load:\n'
@@ -498,7 +501,8 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
 
     if not isinstance(sample_ID, int):
         raise ValueError("\nERROR: DBSCAN_multiplex @ shoot:\n"
-                         "'sample_ID' must be an integer identifying the set of subsampled indices on which to perform DBSCAN clustering\n")    
+                         "'sample_ID' must be an integer identifying the set of subsampled indices "
+                         "on which to perform DBSCAN clustering\n")    
 
     if (sample_ID < 0) or (sample_ID >= N_runs):
         raise ValueError("\nERROR: DBSCAN_multiplex @ shoot:\n"
@@ -646,7 +650,7 @@ metric = 'minkowski', p = 2, verbose = True):
 
     labels_matrix = np.zeros((N_runs, N_samples), dtype = int)
 
-    with NamedTemporaryFile('w', suffix = '.h5', delete = True) as f:
+    with NamedTemporaryFile('w', suffix = '.h5', delete = True, dir = './') as f:
         eps = load(f.name, data, minPts, eps, quantile, subsamples_matrix, samples_weights, metric, p, verbose)
 
         for run in xrange(N_runs):
