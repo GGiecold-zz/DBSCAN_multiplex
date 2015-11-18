@@ -47,5 +47,8 @@ The following few lines show how DBSCAN_multiplex can be used for clustering 50 
 >>> eps, labels_matrix = DB.DBSCAN(data, minPts = 3, subsamples_matrix = subsamples_matrix, verbose = True)
 ```
 
+References
+----------
 
-
+* Ester, M., Kriegel, H.-P., Sander, J. and Xu, X. (1996) "A density-based algorithm for discovering clusters in large spatial databases with noise". Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96). AAAI Press. pp. 226–231.
+* Kriegel, H.-P., Kroeger, P., Sander, J. and Zimek, A. (2011). "Density-based Clustering". WIREs Data Mining and Knowledge Discovery 1 (3): 231–240.
