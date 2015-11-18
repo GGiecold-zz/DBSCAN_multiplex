@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 
-
-
 # DBSCAN_multiplex/DBSCAN_multiplex.py
 
 
@@ -11,7 +9,7 @@
 # Contact: g.giecold@gmail.com, ggiecold@jimmy.harvard.edu
 
 
-r"""A fast and memory-efficient implementation of DBSCAN 
+"""A fast and memory-efficient implementation of DBSCAN 
 (Density-Based Spatial Clustering of Applications with Noise) 
 for repeated rounds of random subsamplings and clusterings from a data-set. 
 
@@ -68,12 +66,6 @@ versus 50 * 653 = 32650 seconds for Scikit-learn.
 """
 
 
-
-
-#***************************************************************************************
-#***************************************************************************************
-
-
 import gc
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
@@ -88,27 +80,17 @@ np.seterr(invalid = 'ignore')
 warnings.filterwarnings('ignore', category = DeprecationWarning)
 
 
-#***************************************************************************************
-#***************************************************************************************
-
-
 __all__ = ['DBSCAN', 'load', 'shoot']
 
 
-#***************************************************************************************
-# memory
-#***************************************************************************************
-
-
 def memory():
-    r"""Determine the machine's memory specifications.
+    """Determine the machine's memory specifications.
 
     Returns
     -------
     mem_info : dictonary
         Holds the current values for the total, free and used memory of the system.
     """
-
 
     mem_info = {}
 
@@ -126,13 +108,8 @@ def memory():
     return mem_info
 
 
-#***************************************************************************************
-# get_chunk_size
-#***************************************************************************************
-
-
 def get_chunk_size(N, n):
-    r"""Given a dimension of size 'N', determine the number of rows or columns 
+    """Given a dimension of size 'N', determine the number of rows or columns 
        that can fit into memory.
 
     Parameters
@@ -148,7 +125,6 @@ def get_chunk_size(N, n):
     chunks_size : int
         The size of a dimension orthogonal to the dimension of size 'N'. 
     """
-
 
     mem_free = memory()['free']
     if mem_free > 60000000:
@@ -181,13 +157,9 @@ def get_chunk_size(N, n):
                           "to perform the remaining computations.\n")
 
 
-#**************************************************************************************************
-# load
-#**************************************************************************************************
-
 def load(hdf5_file_name, data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, 
 metric = 'minkowski', p = 2, verbose = True):
-    r"""Determines the radius 'eps' for DBSCAN clustering of 'data' in an adaptive, data-dependent way.
+    """Determines the radius 'eps' for DBSCAN clustering of 'data' in an adaptive, data-dependent way.
 
     Parameters
     ----------
@@ -247,7 +219,6 @@ metric = 'minkowski', p = 2, verbose = True):
     and Data Mining, Portland, OR, AAAI Press, pp. 226-231. 1996
     """
     
-
     data = np.array(data, copy = False)
     if data.ndim > 2:
         raise ValueError("\nERROR: DBSCAN_multiplex @ load:\n" 
@@ -435,15 +406,10 @@ metric = 'minkowski', p = 2, verbose = True):
     gc.collect()
 
     return eps
-     
-    
-#**************************************************************************************************
-# shoot
-#**************************************************************************************************  
     
 
 def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = True): 
-    r"""Perform DBSCAN clustering with parameters 'minPts' and 'eps'
+    """Perform DBSCAN clustering with parameters 'minPts' and 'eps'
         (as determined by a prior call to 'load' from this module). 
         If multiple subsamples of the dataset were provided in a preliminary call to 'load', 
         'sample_ID' specifies which one of those subsamples is to undergo DBSCAN clustering. 
@@ -486,7 +452,6 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
     In: Proceedings of the 2nd International Conference on Knowledge Discovery
     and Data Mining, Portland, OR, AAAI Press, pp. 226-231. 1996
     """       
-
         
     fileh = tables.open_file(hdf5_file_name, mode = 'r+')
 
@@ -560,14 +525,9 @@ def shoot(hdf5_file_name, minPts, sample_ID = 0, random_state = None, verbose = 
     return core_samples, labels
 
 
-#**************************************************************************************************
-# DBSCAN
-#**************************************************************************************************  
-
-
 def DBSCAN(data, minPts, eps = None, quantile = 50, subsamples_matrix = None, samples_weights = None, 
 metric = 'minkowski', p = 2, verbose = True):
-    r"""Performs Density-Based Spatial Clustering of Applications with Noise,
+    """Performs Density-Based Spatial Clustering of Applications with Noise,
         possibly on various subsamples or combinations of data-points extracted from the whole dataset, 'data'.
         
         If the radius 'eps' is not provided by the user, it will be determined in an adaptive, data-dependent way 
@@ -635,7 +595,6 @@ metric = 'minkowski', p = 2, verbose = True):
     and Data Mining, Portland, OR, AAAI Press, pp. 226-231. 1996
     """
         
-
     assert isinstance(minPts, int) or type(minPts) is np.int_
     assert minPts > 1
 
@@ -660,20 +619,9 @@ metric = 'minkowski', p = 2, verbose = True):
     return eps, labels_matrix
 
 
-
-#***************************************************************************************************
-#***************************************************************************************************
-
-
 if __name__ == '__main__':
     
     import doctest
     import sklearn.cluster
     
     doctest.testmod()
-    
-    
-#***************************************************************************************************
-#***************************************************************************************************
-
-
