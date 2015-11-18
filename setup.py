@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 
-
-
 # DBSCAN_multiplex/setup.py;
 
 # Author: Gregory Giecold for the GC Yuan Lab
@@ -10,27 +8,17 @@
 # Contact: g.giecold@gmail.com, ggiecold@jimmy.harvard.edu
 
 
-r"""Setup script for DBSCAN_multiplex, a fast and memory-efficient implementation of DBSCAN 
+"""Setup script for DBSCAN_multiplex, a fast and memory-efficient implementation of DBSCAN 
 (Density-Based Spatial Clustering of Appplications with Noise). 
 The gain is especially outstanding for applications involving multiple rounds of down-sampling
 and clustering from a common dataset.
 """
 
 
-
-
-#*********************************************************************************
-#*********************************************************************************
-
-
 import codecs
 from os import path
 from sys import version
 from distutils.core import setup
-
-
-#*********************************************************************************
-#*********************************************************************************
 
 
 if version < '2.2.3':
@@ -95,9 +83,3 @@ setup(name = 'DBSCAN_multiplex',
                    
       keywords = 'machine-learning clustering',
 )
-
-
-#*********************************************************************************
-#*********************************************************************************
-
-
