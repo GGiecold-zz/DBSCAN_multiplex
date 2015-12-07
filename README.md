@@ -19,7 +19,7 @@ This 7-fold gain in performance proved critical to the statistical learning appl
 Installation and Requirements
 -----------------------------
 
-DBSCAN_multiplex requires Python 2.7 along with the following packages and a few modules from the Standard Python Library:
+DBSCAN_multiplex requires Python 2.7 on a machine running any member of the Unix-like family of operating systems, along with the following packages and a few modules from the Standard Python Library:
 * NumPy >= 1.9
 * PyTables
 * scikit-learn
