@@ -46,7 +46,7 @@ except:
 
 
 setup(name = 'DBSCAN_multiplex',
-      version = '1.4',
+      version = '1.5',
       
       description = 'Fast and memory-efficient DBSCAN clustering,'
                     'possibly on various subsamples out of a common dataset',
@@ -73,7 +73,6 @@ setup(name = 'DBSCAN_multiplex',
                    'Intended Audience :: Science/Research',
                    'License :: OSI Approved :: MIT License',
                    'Natural Language :: English',
-                   'Operating System :: Microsoft :: Windows',
                    'Operating System :: MacOS :: MacOS X',
                    'Operating System :: POSIX',
                    'Programming Language :: Python :: 2.7',
