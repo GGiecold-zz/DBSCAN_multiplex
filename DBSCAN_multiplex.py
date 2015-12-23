@@ -63,6 +63,14 @@ The benefits of our implementation are even more significant for a larger number
 For instance, for a matrix of 50000 samples and 47 features, 50 rounds of clustering of random subsamples 
 of size 80% would take about 1608 + 50 * 1.3 = 1673 seconds for this version, 
 versus 50 * 653 = 32650 seconds for Scikit-learn.
+
+References
+----------
+* Ester, M., Kriegel, H.-P., Sander, J. and Xu, X., "A Density-Based Algorithm for Discovering Clusters in Large Spatial
+Databases with Noise". 
+In: Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96), pp. 226–231. 1996
+* Kriegel, H.-P., Kroeger, P., Sander, J. and Zimek, A., "Density-based Clustering". 
+In: WIREs Data Mining and Knowledge Discovery, 1, 3, pp. 231–240. 2011
 """
 
 
