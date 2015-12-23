@@ -12,6 +12,14 @@
 (Density-Based Spatial Clustering of Appplications with Noise). 
 The gain is especially outstanding for applications involving multiple rounds of down-sampling
 and clustering from a common dataset.
+
+References
+----------
+* Ester, M., Kriegel, H.-P., Sander, J. and Xu, X., "A Density-Based Algorithm for Discovering Clusters in Large Spatial
+Databases with Noise". 
+In: Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96), pp. 226–231. 1996
+* Kriegel, H.-P., Kroeger, P., Sander, J. and Zimek, A., "Density-based Clustering". 
+In: WIREs Data Mining and Knowledge Discovery, 1, 3, pp. 231–240. 2011
 """
 
 
