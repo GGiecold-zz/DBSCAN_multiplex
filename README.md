@@ -46,8 +46,7 @@ The following few lines show how DBSCAN_multiplex can be used for clustering 50 
 >>> subsamples_matrix = np.zeros((N_iterations, N_sub), dtype = int)
 >>> for i in xrange(N_iterations): 
         subsamples_matrix[i] = np.random.choice(data.shape[0], N_sub, replace = False)
->>> eps, labels_matrix = DB.DBSCAN(data, minPts = 3, subsamples_matrix = subsamples_matrix, 
-                                   verbose = True)
+>>> eps, labels_matrix = DB.DBSCAN(data, minPts = 3, subsamples_matrix = subsamples_matrix, verbose = True)
 ```
 
 References
