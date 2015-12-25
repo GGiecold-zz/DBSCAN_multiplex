@@ -24,9 +24,10 @@ DBSCAN_multiplex requires Python 2.7 on a machine running any member of the Unix
 * PyTables
 * scikit-learn
 
-Upon checking that the required dependencies are installed, you can install DBSCAN_multiplex from the official Python Package Index (PyPI) as follows:
+You can install DBSCAN_multiplex from the official Python Package Index (PyPI) as follows:
 * open a terminal window;
 * type the command: ```pip install DBSCAN_multiplex```
+The command listed above should automatically install or upgrade any missing or outdated dependency among those listed at the beginning of this section.
 
 Usage and Example
 -----------------
