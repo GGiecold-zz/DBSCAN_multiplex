@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 
@@ -54,8 +53,9 @@ ii) perform DBSCAN clustering on this subsample.
 True
 
        
-On the laptop where this code was tested (8GiB of RAM), the implementation 
-herewith took about 188 + 50 * 1.2 seconds to complete, whereas the version provided by Scikit-learn needed 
+On the laptop where this code was tested (Asus Zenbook with 8GiB of RAM and 
+an Intel Core M processor), the implementation herewith took 
+about 188 + 50 * 1.2 seconds to complete, whereas the version provided by Scikit-learn needed 
 at least 50 * 34 seconds, i.e. slightly over 4 minutes versus more than 28 minutes, illustrating 
 the overwelming advantage of the present implementation (not even taking into account the time needed for determining
 a suitable value for epsilon, which accounts for about 39 seconds out of those 188 seconds).
@@ -64,14 +64,6 @@ The benefits of our implementation are even more significant for a larger number
 For instance, for a matrix of 50000 samples and 47 features, 50 rounds of clustering of random subsamples 
 of size 80% would take about 1608 + 50 * 1.3 = 1673 seconds for this version, 
 versus 50 * 653 = 32650 seconds for Scikit-learn.
-
-References
-----------
-* Ester, M., Kriegel, H.-P., Sander, J. and Xu, X., "A Density-Based Algorithm for Discovering Clusters in Large Spatial
-Databases with Noise". 
-In: Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96), pp. 226–231. 1996
-* Kriegel, H.-P., Kroeger, P., Sander, J. and Zimek, A., "Density-based Clustering". 
-In: WIREs Data Mining and Knowledge Discovery, 1, 3, pp. 231–240. 2011
 """
 
 
@@ -81,9 +73,12 @@ from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.neighbors import kneighbors_graph 
 from sklearn.utils import check_random_state
 from tempfile import NamedTemporaryFile
+import platform
 import tables
 import time
 import warnings
+import subprocess
+import re
 
 np.seterr(invalid = 'ignore')
 warnings.filterwarnings('ignore', category = DeprecationWarning)
@@ -99,22 +94,76 @@ def memory():
     -------
     mem_info : dictonary
         Holds the current values for the total, free and used memory of the system.
+
     """
 
     mem_info = {}
 
-    with open('/proc/meminfo') as file:
-        c = 0
-        for line in file:
-            lst = line.split()
-            if str(lst[0]) == 'MemTotal:':
-                mem_info['total'] = int(lst[1])
-            elif str(lst[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
-                c += int(lst[1])
-        mem_info['free'] = c
-        mem_info['used'] = (mem_info['total']) - c
+    is_macosx = False
+    is_linux = False
 
-    return mem_info
+    mac_osx = platform.mac_ver()
+    if mac_osx:
+        is_macosx  = True
+        is_linux = False
+
+    linux = platform.dist()
+    if linux:
+        is_macosx = False
+        is_linux = True
+
+    if is_macosx:
+
+        mem_info = {}
+
+        ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
+        vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
+
+        # Iterate processes
+        processLines = ps.split('\n')
+        sep = re.compile('[\s]+')
+        rssTotal = 0  # kB
+        for row in range(1, len(processLines)):
+            rowText = processLines[row].strip()
+            rowElements = sep.split(rowText)
+            try:
+                rss = float(rowElements[0]) * 1024
+            except:
+                rss = 0  # ignore...
+            rssTotal += rss
+
+        # Process vm_stat
+        vmLines = vm.split('\n')
+        sep = re.compile(':[\s]+')
+        vmStats = {}
+        for row in range(1, len(vmLines) - 2):
+            rowText = vmLines[row].strip()
+            rowElements = sep.split(rowText)
+            vmStats[(rowElements[0])] = int(rowElements[1].strip('\.')) * 4096
+
+        mem_info['total'] = rssTotal
+        mem_info['used'] = vmStats["Pages active"]
+        mem_info['free'] = vmStats["Pages free"]
+
+        return mem_info
+
+    if is_linux:
+
+        with open('/proc/meminfo') as file:
+
+            mem_info = {}
+
+            c = 0
+            for line in file:
+                lst = line.split()
+                if str(lst[0]) == 'MemTotal:':
+                    mem_info['total'] = int(lst[1])
+                elif str(lst[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+                    c += int(lst[1])
+            mem_info['free'] = c
+            mem_info['used'] = (mem_info['total']) - c
+
+            return mem_info
 
 
 def get_chunk_size(N, n):
