@@ -115,7 +115,7 @@ def memory():
             mem_info['free'] = c
             mem_info['used'] = (mem_info['total']) - c
 
-    else:
+    elif platform.mac_ver()[0]:
 
         ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
         vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
@@ -145,6 +145,11 @@ def memory():
         mem_info['total'] = rssTotal
         mem_info['used'] = vmStats["Pages active"]
         mem_info['free'] = vmStats["Pages free"]
+
+    else:
+
+        raise('Unsupported Operating System. \n')
+        exit(1)
 
     return mem_info
 
