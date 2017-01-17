@@ -99,22 +99,23 @@ def memory():
 
     mem_info = {}
 
-    is_macosx = False
-    is_linux = False
+    if platform.dist()[0]:
 
-    mac_osx = platform.mac_ver()
-    if mac_osx:
-        is_macosx  = True
-        is_linux = False
+        with open('/proc/meminfo') as file:
 
-    linux = platform.dist()
-    if linux:
-        is_macosx = False
-        is_linux = True
+            mem_info = {}
 
-    if is_macosx:
+            c = 0
+            for line in file:
+                lst = line.split()
+                if str(lst[0]) == 'MemTotal:':
+                    mem_info['total'] = int(lst[1])
+                elif str(lst[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
+                    c += int(lst[1])
+            mem_info['free'] = c
+            mem_info['used'] = (mem_info['total']) - c
 
-        mem_info = {}
+    else:
 
         ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
         vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
@@ -145,25 +146,7 @@ def memory():
         mem_info['used'] = vmStats["Pages active"]
         mem_info['free'] = vmStats["Pages free"]
 
-        return mem_info
-
-    if is_linux:
-
-        with open('/proc/meminfo') as file:
-
-            mem_info = {}
-
-            c = 0
-            for line in file:
-                lst = line.split()
-                if str(lst[0]) == 'MemTotal:':
-                    mem_info['total'] = int(lst[1])
-                elif str(lst[0]) in ('MemFree:', 'Buffers:', 'Cached:'):
-                    c += int(lst[1])
-            mem_info['free'] = c
-            mem_info['used'] = (mem_info['total']) - c
-
-            return mem_info
+    return mem_info
 
 
 def get_chunk_size(N, n):
