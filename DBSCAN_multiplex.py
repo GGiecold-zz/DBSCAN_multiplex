@@ -68,17 +68,19 @@ versus 50 * 653 = 32650 seconds for Scikit-learn.
 
 
 import gc
+import platform
+import re
+import subprocess
+import tables
+from tempfile import NamedTemporaryFile
+import time
+import warnings
+
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.neighbors import kneighbors_graph 
 from sklearn.utils import check_random_state
-from tempfile import NamedTemporaryFile
-import platform
-import tables
-import time
-import warnings
-import subprocess
-import re
+
 
 np.seterr(invalid = 'ignore')
 warnings.filterwarnings('ignore', category = DeprecationWarning)
@@ -99,12 +101,8 @@ def memory():
 
     mem_info = {}
 
-    if platform.dist()[0]:
-
+    if platform.linux_distribution()[0]:
         with open('/proc/meminfo') as file:
-
-            mem_info = {}
-
             c = 0
             for line in file:
                 lst = line.split()
@@ -114,41 +112,37 @@ def memory():
                     c += int(lst[1])
             mem_info['free'] = c
             mem_info['used'] = (mem_info['total']) - c
-
     elif platform.mac_ver()[0]:
-
         ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
         vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
 
         # Iterate processes
-        processLines = ps.split('\n')
+        process_lines = ps.split('\n')
         sep = re.compile('[\s]+')
-        rssTotal = 0  # kB
-        for row in range(1, len(processLines)):
-            rowText = processLines[row].strip()
-            rowElements = sep.split(rowText)
+        rss_total = 0  # kB
+        for row in range(1, len(process_lines)):
+            row_text = process_lines[row].strip()
+            row_elements = sep.split(row_text)
             try:
-                rss = float(rowElements[0]) * 1024
+                rss = float(row_elements[0]) * 1024
             except:
                 rss = 0  # ignore...
-            rssTotal += rss
+            rss_total += rss
 
         # Process vm_stat
-        vmLines = vm.split('\n')
+        vm_lines = vm.split('\n')
         sep = re.compile(':[\s]+')
-        vmStats = {}
-        for row in range(1, len(vmLines) - 2):
-            rowText = vmLines[row].strip()
-            rowElements = sep.split(rowText)
-            vmStats[(rowElements[0])] = int(rowElements[1].strip('\.')) * 4096
+        vm_stats = {}
+        for row in range(1, len(vm_lines) - 2):
+            row_text = vm_lines[row].strip()
+            row_elements = sep.split(row_text)
+            vm_stats[(row_elements[0])] = int(row_elements[1].strip('\.')) * 4096
 
-        mem_info['total'] = rssTotal
-        mem_info['used'] = vmStats["Pages active"]
-        mem_info['free'] = vmStats["Pages free"]
-
+        mem_info['total'] = rss_total
+        mem_info['used'] = vm_stats["Pages active"]
+        mem_info['free'] = vm_stats["Pages free"]
     else:
-
-        raise('Unsupported Operating System. \n')
+        raise('Unsupported Operating System.\n')
         exit(1)
 
     return mem_info
