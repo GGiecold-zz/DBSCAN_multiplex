@@ -290,7 +290,7 @@ metric = 'minkowski', p = 2, verbose = True):
         raise ValueError('\nERROR: DBSCAN_multiplex @ load:\n'
                          'the number of sampled indices cannot exceed the total number of samples in the whole data-set.\n')
 
-    for i in xrange(N_runs):
+    for i in range(N_runs):
         subsamples_matrix[i] = np.unique(subsamples_matrix[i])
  
     if not isinstance(minPts, int):
@@ -305,10 +305,10 @@ metric = 'minkowski', p = 2, verbose = True):
         # Determine the parameter 'eps' as the median of the distribution
         # of the maximum of the minPts-nearest neighbors distances for each sample.
         if verbose:
-            print("INFO: DBSCAN_multiplex @ load:\n"
+            print(("INFO: DBSCAN_multiplex @ load:\n"
                   "starting the determination of an appropriate value of 'eps' for this data-set"
                   " and for the other parameter of the DBSCAN algorithm set to {minPts}.\n"
-                  "This might take a while.".format(**locals()))
+                  "This might take a while.".format(**locals())))
 
         beg_eps = time.time()
 
@@ -318,7 +318,7 @@ metric = 'minkowski', p = 2, verbose = True):
         k_distances = kneighbors_graph(data, minPts, mode = 'distance', metric = metric, p = p).data
  
         radii = np.zeros(N_samples, dtype = float)
-        for i in xrange(0, minPts):
+        for i in range(0, minPts):
             radii = np.maximum(radii, k_distances[i::minPts]) 
              
         if quantile == 50:     
@@ -329,9 +329,9 @@ metric = 'minkowski', p = 2, verbose = True):
         end_eps = time.time()
 
         if verbose:
-            print("\nINFO: DBSCAN_multiplex @ load:\n"
+            print(("\nINFO: DBSCAN_multiplex @ load:\n"
                   "done with evaluating parameter 'eps' from the data-set provided."
-                  " This took {} seconds. Value of epsilon: {}.".format(round(end_eps - beg_eps, 4), eps))
+                  " This took {} seconds. Value of epsilon: {}.".format(round(end_eps - beg_eps, 4), eps)))
 
     else:
         if not (isinstance(eps, float) or isinstance(eps, int)):
@@ -349,10 +349,10 @@ metric = 'minkowski', p = 2, verbose = True):
     # that this definition of neighbors leaves the original point in,
     # which will be considered later.
     if verbose:
-       print("\nINFO: DBSCAN_multiplex @ load:\n"
+       print(("\nINFO: DBSCAN_multiplex @ load:\n"
              "identifying the neighbors within an hypersphere of radius {eps} around each sample,"
              " while at the same time evaluating the number of epsilon-neighbors for each sample.\n"
-             "This might take a fair amount of time.".format(**locals()))
+             "This might take a fair amount of time.".format(**locals())))
 
     beg_neigh = time.time()
 
@@ -377,7 +377,7 @@ metric = 'minkowski', p = 2, verbose = True):
                                            filters = None)   
 
     chunks_size = get_chunk_size(N_samples, 3)
-    for i in xrange(0, N_samples, chunks_size):
+    for i in range(0, N_samples, chunks_size):
         chunk = data[i:min(i + chunks_size, N_samples)]
 
         D = pairwise_distances(chunk, data, metric = metric, p = p, n_jobs = 1)
@@ -385,7 +385,7 @@ metric = 'minkowski', p = 2, verbose = True):
         D = (D <= eps)
 
         if samples_weights is None:
-            for run in xrange(N_runs):
+            for run in range(N_runs):
                 x = subsamples_matrix[run]
                 M = np.take(D, x, axis = 1)
 
@@ -396,7 +396,7 @@ metric = 'minkowski', p = 2, verbose = True):
 
                 del M
         else:
-            for run in xrange(N_runs):
+            for run in range(N_runs):
                 x = subsamples_matrix[run]
 
                 M = np.take(D, x, axis = 1)
@@ -434,8 +434,8 @@ metric = 'minkowski', p = 2, verbose = True):
     end_neigh = time.time()
 
     if verbose:
-        print("\nINFO: DBSCAN_multiplex @ load:\n"
-              "done with the neighborhoods. This step took {} seconds.".format(round(end_neigh - beg_neigh, 4)))
+        print(("\nINFO: DBSCAN_multiplex @ load:\n"
+              "done with the neighborhoods. This step took {} seconds.".format(round(end_neigh - beg_neigh, 4))))
 
     gc.collect()
 
@@ -646,7 +646,7 @@ metric = 'minkowski', p = 2, verbose = True):
     with NamedTemporaryFile('w', suffix = '.h5', delete = True, dir = './') as f:
         eps = load(f.name, data, minPts, eps, quantile, subsamples_matrix, samples_weights, metric, p, verbose)
 
-        for run in xrange(N_runs):
+        for run in range(N_runs):
             _, labels = shoot(f.name, minPts, sample_ID = run, verbose = verbose)
             labels_matrix[run] = labels
 
